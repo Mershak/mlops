@@ -5,6 +5,7 @@ sklearn.set_config(transform_output="pandas")  #says pass pandas tables through 
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.pipeline import Pipeline
 
+
 class CustomMappingTransformer(BaseEstimator, TransformerMixin):
 
   def __init__(self, mapping_column, mapping_dict:dict):
@@ -51,6 +52,8 @@ class CustomMappingTransformer(BaseEstimator, TransformerMixin):
     result = self.transform(X)
     return result
 
+
+
 #This class will rename one or more columns.
 class CustomRenamingTransformer(BaseEstimator, TransformerMixin):
 
@@ -88,6 +91,8 @@ class CustomRenamingTransformer(BaseEstimator, TransformerMixin):
     result = self.transform(X)
     return result
 
+
+
 class CustomOHETransformer(BaseEstimator, TransformerMixin):
   def __init__(self, target_column, dummy_na=False, drop_first=False):
     self.target_column = target_column
@@ -119,4 +124,71 @@ class CustomOHETransformer(BaseEstimator, TransformerMixin):
       #self.fit(X,y)
       result = self.transform(X)
       return result
+
+
+class CustomTukeyTransformer(BaseEstimator, TransformerMixin):
+  def __init__(self, target_column, fence='outer'):
+    assert fence in ['inner', 'outer']
+    self.fitted = False
+    self.target_column = target_column
+    self.fence = fence
+
+  def fit(self,df):
+    assert isinstance(df, pd.core.frame.DataFrame), f'expected Dataframe but got {type(df)} instead.'
+    assert self.target_column in df.columns, f'unknown column {self.target_column}'
+    assert all([isinstance(v, (int, float)) for v in df[self.target_column].to_list()])
+    
+    q1 = df[self.target_column].quantile(0.25)
+    q3 = df[self.target_column].quantile(0.75)
+    iqr = q3-q1
+    if self.fence == "outer":
+      self.low = q1-3*iqr
+      self.high = q3+3*iqr
+    else:
+      print("asd")
+      self.low = q1-1.5*iqr
+      self.high = q3+1.5*iqr
+    self.fitted = True
+  
+  def transform(self, df):
+    assert self.fitted, f'NotFittedError: This {self.__class__.__name__} instance is not fitted yet. Call "fit" with appropriate arguments before using this estimator.'
+    return self.fit_transform(df)
+
+  def fit_transform(self, df):
+    self.fit(df)
+    self.df = df.copy()
+    self.df[self.target_column] = self.df[self.target_column].clip(lower=self.low, upper=self.high)
+    self.df.reset_index(drop=True)
+    return self.df
+
+
+
+class CustomSigma3Transformer(BaseEstimator, TransformerMixin):
+  def __init__(self, target_column):
+    self.target_column = target_column
+    self.fitted = False
+
+  def fit(self, df):
+    assert isinstance(df, pd.core.frame.DataFrame), f'expected Dataframe but got {type(df)} instead.'
+    assert self.target_column in df.columns, f'unknown column {self.target_column}'
+    assert all([isinstance(v, (int, float)) for v in df[self.target_column].to_list()])
+
+    #your code below
+    sigma = df[self.target_column].std()
+    mean = df[self.target_column].mean()
+    self.sigma_low = mean - 3 * sigma
+    self.sigma_high = mean + 3 * sigma
+    self.fitted = True
+
+  def transform(self, df):
+    assert self.fitted, f'NotFittedError: This {self.__class__.__name__} instance is not fitted yet. Call "fit" with appropriate arguments before using this estimator.'
+    return self.fit_transform(df)
+  
+  def fit_transform(self, df):
+    self.fit(df)
+    self.df = df.copy()
+    self.df[self.target_column] = self.df[self.target_column].clip(lower=self.sigma_low, upper=self.sigma_high)
+    self.df.reset_index(drop=True)
+    return self.df
+
 
