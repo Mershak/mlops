@@ -137,7 +137,7 @@ class CustomTukeyTransformer(BaseEstimator, TransformerMixin):
     assert isinstance(df, pd.core.frame.DataFrame), f'expected Dataframe but got {type(df)} instead.'
     assert self.target_column in df.columns, f'unknown column {self.target_column}'
     assert all([isinstance(v, (int, float)) for v in df[self.target_column].to_list()])
-    
+
     q1 = df[self.target_column].quantile(0.25)
     q3 = df[self.target_column].quantile(0.75)
     iqr = q3-q1
@@ -145,22 +145,21 @@ class CustomTukeyTransformer(BaseEstimator, TransformerMixin):
       self.low = q1-3*iqr
       self.high = q3+3*iqr
     else:
-      print("asd")
+      # print("asd")
       self.low = q1-1.5*iqr
       self.high = q3+1.5*iqr
     self.fitted = True
-  
+
   def transform(self, df):
     assert self.fitted, f'NotFittedError: This {self.__class__.__name__} instance is not fitted yet. Call "fit" with appropriate arguments before using this estimator.'
-    return self.fit_transform(df)
-
-  def fit_transform(self, df):
-    self.fit(df)
     self.df = df.copy()
     self.df[self.target_column] = self.df[self.target_column].clip(lower=self.low, upper=self.high)
     self.df.reset_index(drop=True)
     return self.df
 
+  def fit_transform(self, df, x=None):
+    self.fit(df)
+    return self.transform(df)
 
 
 class CustomSigma3Transformer(BaseEstimator, TransformerMixin):
@@ -182,13 +181,16 @@ class CustomSigma3Transformer(BaseEstimator, TransformerMixin):
 
   def transform(self, df):
     assert self.fitted, f'NotFittedError: This {self.__class__.__name__} instance is not fitted yet. Call "fit" with appropriate arguments before using this estimator.'
-    return self.fit_transform(df)
-  
-  def fit_transform(self, df):
-    self.fit(df)
     self.df = df.copy()
     self.df[self.target_column] = self.df[self.target_column].clip(lower=self.sigma_low, upper=self.sigma_high)
     self.df.reset_index(drop=True)
     return self.df
+
+  def fit_transform(self, df):
+    self.fit(df)
+    return self.transform(df)
+
+
+
 
 
