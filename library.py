@@ -191,6 +191,24 @@ class CustomSigma3Transformer(BaseEstimator, TransformerMixin):
     return self.transform(df)
 
 
+class CustomRobustTransformer(BaseEstimator, TransformerMixin):
+  def __init__(self, column):
+    self.column = column
+    #fill in rest below
+
+  def fit (self,df, y=None):
+    self.df = df.copy()
+    self.iqr = self.df[self.column].quantile(.75) - self.df[self.column].quantile(.25)
+    self.med = self.df[self.column].median()
+    return self
+  
+  def transform(self,df):
+    self.fit(df)
+    self.df[self.column] -= self.med
+    self.df[self.column] /= self.iqr
+    return self.df
+
+
 
 
 
