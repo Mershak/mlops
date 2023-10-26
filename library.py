@@ -155,12 +155,13 @@ class CustomTukeyTransformer(BaseEstimator, TransformerMixin):
       self.low = q1-1.5*iqr
       self.high = q3+1.5*iqr
     self.fitted = True
+    return self
 
   def transform(self, df):
     assert self.fitted, f'NotFittedError: This {self.__class__.__name__} instance is not fitted yet. Call "fit" with appropriate arguments before using this estimator.'
     self.df = df.copy()
     self.df[self.target_column] = self.df[self.target_column].clip(lower=self.low, upper=self.high)
-    self.df.reset_index(drop=True)
+    # self.df.reset_index(drop=True)
     return self.df
 
   def fit_transform(self, df, x=None):
