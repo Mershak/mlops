@@ -209,7 +209,7 @@ class CustomRobustTransformer(BaseEstimator, TransformerMixin):
     return self
   
   def transform(self,df):
-    self.df = df.copy(df)
+    self.df = df.copy()
     self.df[self.column] -= self.med
     self.df[self.column] /= self.iqr
     return self.df
