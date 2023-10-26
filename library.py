@@ -204,15 +204,18 @@ class CustomRobustTransformer(BaseEstimator, TransformerMixin):
 
   def fit (self,df, y=None):
     self.df = df.copy()
-    self.iqr = self.df[self.column].quantile(.75) - self.df[self.column].quantile(.25)
+    self.iqr = float(self.df[self.column].quantile(.75) - self.df[self.column].quantile(.25))
     self.med = self.df[self.column].median()
     return self
   
   def transform(self,df):
-    self.fit(df)
     self.df[self.column] -= self.med
     self.df[self.column] /= self.iqr
     return self.df
+
+  def fit_transform(self,df,y=None):
+    self.fit(df)
+    return self.transform(df)
 
 def find_random_state(features_df, labels, n=200):
   model = KNeighborsClassifier(n_neighbors=5)  #instantiate with k=5.
