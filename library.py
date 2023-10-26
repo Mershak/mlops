@@ -203,12 +203,12 @@ class CustomRobustTransformer(BaseEstimator, TransformerMixin):
     #fill in rest below
 
   def fit (self,df, y=None):
-    self.df = df.copy()
     self.iqr = float(self.df[self.column].quantile(.75) - self.df[self.column].quantile(.25))
     self.med = self.df[self.column].median()
     return self
   
   def transform(self,df):
+    self.df = df.copy(df)
     self.df[self.column] -= self.med
     self.df[self.column] /= self.iqr
     return self.df
