@@ -11,6 +11,7 @@ import category_encoders as ce
 from sklearn.impute import KNNImputer
 from sklearn.metrics import f1_score  
 from sklearn.neighbors import KNeighborsClassifier 
+from sklearn.model_selection import train_test_split
 
 class CustomMappingTransformer(BaseEstimator, TransformerMixin):
 
